@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
-  <meta name="theme-color" content="#0a0a0c" />
+  <meta name="theme-color" content="#090d16" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Antigravity Remote" />
+  <meta name="apple-mobile-web-app-title" content="AGY 리모컨" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
   <title>Antigravity Mobile Remote</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -434,6 +438,24 @@
       window.visualViewport.addEventListener("scroll", syncGatewayVisualViewport);
     }
     window.addEventListener("resize", syncGatewayVisualViewport);
+
+    let gatewayDeferredPrompt = null;
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      gatewayDeferredPrompt = e;
+    });
+    window.addEventListener("message", async (e) => {
+      if (e.data && e.data.type === "CC_PWA_INSTALL_REQUEST" && gatewayDeferredPrompt) {
+        gatewayDeferredPrompt.prompt();
+        await gatewayDeferredPrompt.userChoice;
+        gatewayDeferredPrompt = null;
+      }
+    });
 
     bootGateway();
   </script>
